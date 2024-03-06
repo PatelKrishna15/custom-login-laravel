@@ -27,6 +27,7 @@ class AuthController extends Controller
         User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'username' => $request->username,
             'password' => Hash::make($request->password),
         ]);
 
@@ -39,12 +40,16 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->only('email', 'password');
+        $loginType = filter_var($request->input('login'), FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        $credentials = [
+            $loginType => $request->input('login'),
+            'password' => $request->input('password')
+        ];
         if (Auth::attempt($credentials)) {
             // Authentication passed...
             return redirect()->intended('/home'); // Redirect to dashboard or any desired page
         }
-        return redirect()->back()->withInput($request->only('email'))->withErrors([
+        return redirect()->back()->withInput($request->only('login'))->withErrors([
             'email' => 'These credentials do not match our records.',
         ]);
     }
